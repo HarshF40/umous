@@ -1,0 +1,13 @@
+frontend
+backend
+devops
+full-stack
+ai-engineer
+data-analyst
+ai-data-scientist
+android
+ios
+blockchain
+cyber-security
+game-developer
+mlops
