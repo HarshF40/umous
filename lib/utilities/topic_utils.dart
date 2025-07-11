@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-const String _geminiApiKey = 'AIzaSyDZUh4vSt9NpDA-LZTiJI7M1O85fbfKufA';
+const String _geminiApiKey = '';
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
