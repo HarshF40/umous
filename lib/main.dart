@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:umous/firebase_options.dart';
+import 'package:umous/pages/topic_page.dart';
 import 'pages/homepage.dart';
 
 void main() async {
@@ -17,8 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      home: const HomePage(),
+      home: const TopicPage(topicName: 'Backend'),
     );
   }
 }
