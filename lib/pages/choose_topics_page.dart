@@ -169,18 +169,34 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final newTopic = controller.text.trim();
               if (newTopic.isNotEmpty) {
-                // Add the new topic to the local list
-                setState(() {
-                  _topics.add(newTopic);
-                  _topics.sort();
-                });
+                // Show loading dialog
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) =>
+                      const Center(child: CircularProgressIndicator()),
+                );
+                // Call the async function
+                final result = await handleNewTopic(newTopic);
+                // Pop the loading dialog
+                Navigator.of(context, rootNavigator: true).pop();
+                // Show a result message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text('Topic "$newTopic" added successfully')),
+                    content: Text(result
+                        ? 'Topic "$newTopic" added successfully'
+                        : 'Failed to add topic "$newTopic"'),
+                  ),
                 );
+                if (result) {
+                  setState(() {
+                    _topics.add(newTopic);
+                    _topics.sort();
+                  });
+                }
               }
               Navigator.pop(context);
             },

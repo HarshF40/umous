@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-const String _geminiApiKey = '';
+const String _geminiApiKey = 'AIzaSyDZUh4vSt9NpDA-LZTiJI7M1O85fbfKufA';
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
@@ -54,27 +54,27 @@ Return the roadmap for "$topic" in the **exact same comma-separated format**.
       final content = candidates[0]['content'];
       final parts = content['parts'];
       final roadmapText = parts.map((p) => p['text']).join().trim();
-      // send to firebase and return true 
-            // ✅ Get the existing document
-        final docRef = FirebaseFirestore.instance
-            .collection('roadmaps')
-            .doc('topics');
+      // send to firebase and return true
+      // ✅ Get the existing document
+      final docRef =
+          FirebaseFirestore.instance.collection('roadmaps').doc('topics');
 
-        final docSnapshot = await docRef.get();
+      final docSnapshot = await docRef.get();
 
-        final currentFields = docSnapshot.data();
-        final nextId = currentFields == null
-            ? "1"
-            : (currentFields.length + 1).toString();
+      final currentFields = docSnapshot.data();
+      final nextId =
+          currentFields == null ? "1" : (currentFields.length + 1).toString();
 
-        // ✅ Add new field to the existing map
-        await docRef.set(
-          {nextId: {topic: roadmapText}},
-          SetOptions(merge: true),
-        );
+      // ✅ Add new field to the existing map
+      await docRef.set(
+        {
+          nextId: {topic: roadmapText}
+        },
+        SetOptions(merge: true),
+      );
 
-        print("✅ Roadmap for '$topic' added under field: $nextId");
-        return true;
+      print("✅ Roadmap for '$topic' added under field: $nextId");
+      return true;
     } else {
       print("⚠️ Gemini returned no candidates.");
       return false;
