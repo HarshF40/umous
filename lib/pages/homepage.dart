@@ -12,13 +12,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // User's selected topics (default to 4)
-  List<String> selectedTopics = [
-    'Python Programming',
-    'Data Structures',
-    'Operating Systems',
-    'Algorithms',
-  ];
+  // User's selected topics (start empty)
+  List<String> selectedTopics = [];
 
   void _chooseTopics() async {
     final result = await Navigator.push<List<String>>(
