@@ -39,7 +39,7 @@ import 'package:http/http.dart' as http;
 /// Fetch top 5 YouTube videos for a given search query.
 /// Returns a List of Maps containing 'title', 'thumbnail', and 'link'.
 Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
-  const String apiKey = 'AIzaSyCAuEF4vNSXkA4PFlil6VpqbCGHxPqKN4c'; // Replace with your actual API key
+  const String apiKey = ''; // Replace with your actual API key
 
   final Uri url = Uri.parse(
     'https://www.googleapis.com/youtube/v3/search'
