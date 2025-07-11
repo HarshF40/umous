@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:umous/pages/chat.dart';
+import 'dart:math';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -36,6 +37,292 @@ class HomePage extends StatelessWidget {
         },
         child: const Icon(Icons.chat),
       ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Today's Plan Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade100.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "Today's Plan",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Review firees today',
+                        style: TextStyle(fontSize: 15, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 20, color: Colors.black54),
+                ],
+              ),
+            ),
+            // Continue Learning
+            const Text(
+              'Continue Learning',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.7,
+              children: const [
+                _LearningCard(title: 'Data Structures'),
+                _LearningCard(title: 'Machine Learning'),
+                _LearningCard(title: 'Operating Systems'),
+                _LearningCard(title: 'Algorithms'),
+              ],
+            ),
+            const SizedBox(height: 28),
+            // Productivity Chart
+            const Text(
+              'Productivity',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Chart + Stats Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade100.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Blue GitHub-style chart fills width
+                  const BlueContributionChart(),
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 32,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: const [
+                      _ProductivityStat(
+                          label: 'Longest Streak', value: '12 days'),
+                      _ProductivityStat(
+                          label: 'Current Streak', value: '5 days'),
+                      _ProductivityStat(
+                          label: 'Highest Productivity', value: '7h'),
+                      _ProductivityStat(label: "Yesterday's", value: '4h'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
+      ),
+    );
+  }
+}
+
+class _LearningCard extends StatelessWidget {
+  final String title;
+  const _LearningCard({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 170,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.shade100.withOpacity(0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const Icon(Icons.arrow_forward_ios, size: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class BlueContributionChart extends StatelessWidget {
+  const BlueContributionChart({super.key});
+
+  // Simulated productivity data for a 7-row, N-column grid
+  List<List<int>> _generateFakeData(int rows, int cols) {
+    final random = Random();
+    return List.generate(
+        rows, (_) => List.generate(cols, (_) => random.nextInt(5)));
+  }
+
+  Color _getBlueShade(int value) {
+    // 0 = lightest, 4 = darkest
+    switch (value) {
+      case 0:
+        return Colors.blue.shade50;
+      case 1:
+        return Colors.blue.shade100;
+      case 2:
+        return Colors.blue.shade300;
+      case 3:
+        return Colors.blue.shade500;
+      case 4:
+      default:
+        return Colors.blue.shade700;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const int rows = 7;
+        const double minCellSize = 12.0;
+        const double maxCellSize = 20.0;
+        const double cellSpacing = 4.0;
+        // Calculate max columns that fit in the available width
+        int cols =
+            ((constraints.maxWidth + cellSpacing) / (minCellSize + cellSpacing))
+                .floor();
+        double cellSize =
+            (constraints.maxWidth - (cols - 1) * cellSpacing) / cols;
+        cellSize = cellSize.clamp(minCellSize, maxCellSize);
+        // Recalculate cols in case cellSize was clamped
+        cols = ((constraints.maxWidth + cellSpacing) / (cellSize + cellSpacing))
+            .floor();
+        final data = _generateFakeData(rows, cols);
+        return SizedBox(
+          height: rows * cellSize + (rows - 1) * cellSpacing,
+          width: double.infinity,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: List.generate(cols, (col) {
+              return Padding(
+                padding:
+                    EdgeInsets.only(right: col == cols - 1 ? 0 : cellSpacing),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: List.generate(rows, (row) {
+                    return Padding(
+                      padding: EdgeInsets.only(
+                          bottom: row == rows - 1 ? 0 : cellSpacing),
+                      child: Container(
+                        width: cellSize,
+                        height: cellSize,
+                        decoration: BoxDecoration(
+                          color: _getBlueShade(data[row][col]),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              );
+            }),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProductivityStat extends StatelessWidget {
+  final String label;
+  final String value;
+  const _ProductivityStat({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontSize: 13,
+          ),
+        ),
+      ],
     );
   }
 }
