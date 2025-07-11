@@ -1,0 +1,17 @@
+const List<String> allTopics = [
+  'Python Programming',
+  'Data Structures',
+  'Operating Systems',
+  'Algorithms',
+  'Web Development',
+  'Artificial Intelligence',
+  'Databases',
+  'Mobile App Development',
+  'Cybersecurity',
+  'Cloud Computing',
+  'Networking',
+  'Mathematics',
+  'Statistics',
+  'Blockchain',
+  'DevOps',
+];
