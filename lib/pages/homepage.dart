@@ -2,24 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:umous/pages/chat.dart';
 import 'dart:math';
 import './choose_topics_page.dart';
-
-// Add the generic TopicPage
-class TopicPage extends StatelessWidget {
-  final String topicName;
-  const TopicPage({super.key, required this.topicName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(topicName),
-      ),
-      body: Center(
-        child: Text('Content for $topicName will appear here.'),
-      ),
-    );
-  }
-}
+import './topic_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,11 +29,11 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-    if (result != null && result.isNotEmpty) {
-      setState(() {
+    setState(() {
+      if (result != null) {
         selectedTopics = result;
-      });
-    }
+      }
+    });
   }
 
   @override
