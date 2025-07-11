@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utilities/topic_utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChooseTopicsPage extends StatefulWidget {
   final List<String> selectedTopics;
@@ -127,8 +128,37 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
                                 ),
                               ),
                               ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pop(context, _chosen);
+                                onPressed: () async {
+                                  setState(() {
+                                    _saving = true;
+                                  });
+                                  try {
+                                    final user =
+                                        FirebaseAuth.instance.currentUser;
+                                    if (user != null) {
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(user.uid)
+                                          .collection('topics')
+                                          .doc('selected')
+                                          .set({
+                                        'selectedTopics': _chosen,
+                                      }, SetOptions(merge: true));
+                                    }
+                                    setState(() {
+                                      _saving = false;
+                                    });
+                                    Navigator.pop(context, _chosen);
+                                  } catch (e) {
+                                    setState(() {
+                                      _saving = false;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Failed to save topics. Please try again.')),
+                                    );
+                                  }
                                 },
                                 child: const Text('Save'),
                               ),

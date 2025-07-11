@@ -3,6 +3,8 @@ import 'package:umous/pages/chat.dart';
 import 'dart:math';
 import './choose_topics_page.dart';
 import './topic_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,6 +16,39 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   // User's selected topics (start empty)
   List<String> selectedTopics = [];
+  bool _loadingTopics = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserTopics();
+  }
+
+  Future<void> _fetchUserTopics() async {
+    setState(() {
+      _loadingTopics = true;
+    });
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('topics')
+            .doc('selected')
+            .get();
+        final data = doc.data();
+        if (data != null && data['selectedTopics'] is List) {
+          selectedTopics = List<String>.from(data['selectedTopics']);
+        }
+      }
+    } catch (e) {
+      // Optionally handle error
+    }
+    setState(() {
+      _loadingTopics = false;
+    });
+  }
 
   void _chooseTopics() async {
     final result = await Navigator.push<List<String>>(
@@ -29,6 +64,13 @@ class _HomePageState extends State<HomePage> {
         selectedTopics = result;
       }
     });
+  }
+
+  void _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(); // Close the drawer
+    }
   }
 
   @override
@@ -77,6 +119,11 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
                 _chooseTopics();
               },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: _logout,
             ),
           ],
         ),
