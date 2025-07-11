@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:umous/pages/timer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class TopicPage extends StatefulWidget {
@@ -136,7 +137,8 @@ class _TopicPageState extends State<TopicPage> {
               )),
           IconButton(
               icon: const Icon(Icons.timer, color: Color(0xFF389bdc)),
-              onPressed: () {}),
+              onPressed: () {Navigator.of(context).push(
+                MaterialPageRoute(builder: (context)=>const TimerScreen()));}),
         ],
       ),
       body: SingleChildScrollView(
