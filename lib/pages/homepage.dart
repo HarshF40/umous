@@ -95,13 +95,6 @@ class _HomePageState extends State<HomePage> {
             fontSize: 28,
           ),
         ),
-        actions: [
-          IconButton(
-            icon:
-                const Icon(Icons.account_circle_outlined, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -263,8 +256,6 @@ class _HomePageState extends State<HomePage> {
         showUnselectedLabels: false,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
         ],
       ),
