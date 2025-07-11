@@ -26,35 +26,39 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Future<void> _loadCompletedTopicsAndGenerateQuiz() async {
-  try {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    final docRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(uid)
-        .collection('topics')
-        .doc('selected')
-        .collection(widget.domainName) // <-- Access subcollection for domainName
-        .doc('progress');              // <-- Target progress document
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('topics')
+          .doc('selected')
+          .collection(
+              widget.domainName) // <-- Access subcollection for domainName
+          .doc('progress'); // <-- Target progress document
 
-    final doc = await docRef.get();
+      final doc = await docRef.get();
 
-    if (!doc.exists || doc.data() == null || !doc.data()!.containsKey('completedSubtopics')) {
-      print("⚠️ No completedSubtopics found for '${widget.domainName}'");
-      return;
+      if (!doc.exists ||
+          doc.data() == null ||
+          !doc.data()!.containsKey('completedSubtopics')) {
+        print("⚠️ No completedSubtopics found for '${widget.domainName}'");
+        return;
+      }
+
+      final completedTopics =
+          List<String>.from(doc['completedSubtopics'] ?? []);
+
+      final quiz = await generateQuizFromTopics(completedTopics);
+
+      setState(() {
+        _quizQuestions = quiz;
+      });
+    } catch (e) {
+      print('❌ Failed to load topics or generate quiz: $e');
     }
-
-    final completedTopics = List<String>.from(doc['completedSubtopics'] ?? []);
-
-    final quiz = await generateQuizFromTopics(completedTopics);
-
-    setState(() {
-      _quizQuestions = quiz;
-    });
-  } catch (e) {
-    print('❌ Failed to load topics or generate quiz: $e');
   }
-}
 
   void _checkAnswer(String selected) {
     if (_answered) return;
@@ -79,6 +83,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _showScoreDialog() {
+    final quizNumber = 'quiz${DateTime.now().millisecondsSinceEpoch}';
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -87,7 +92,29 @@ class _QuizPageState extends State<QuizPage> {
         actions: [
           TextButton(
             child: const Text("Close"),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              // Save quiz score as a field in the quizzes document with sequential quiz number
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                final docRef = FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('topics')
+                    .doc('selected')
+                    .collection(widget.domainName)
+                    .doc('quizzes');
+                // Fetch current quizzes to determine the next quiz number
+                final doc = await docRef.get();
+                int quizCount = 0;
+                if (doc.exists && doc.data() != null) {
+                  quizCount = doc.data()!.length;
+                }
+                final quizNumber = 'quiz${quizCount + 1}';
+                await docRef.set({quizNumber: _score}, SetOptions(merge: true));
+                print('Saved $quizNumber: $_score for ${widget.domainName}');
+              }
+              Navigator.pop(context);
+            },
           )
         ],
       ),
@@ -122,7 +149,8 @@ class _QuizPageState extends State<QuizPage> {
         ),
         child: Row(
           children: [
-            Text("$label. ", style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text("$label. ",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             Expanded(child: Text(text)),
           ],
         ),
