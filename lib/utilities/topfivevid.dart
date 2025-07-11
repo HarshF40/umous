@@ -36,10 +36,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Fetch top 5 YouTube videos for a given search query.
+/// Fetch top 5 YouTube videos for a given search query (subtopic).
 /// Returns a List of Maps containing 'title', 'thumbnail', and 'link'.
 Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
-  const String apiKey = ''; // Replace with your actual API key
+  const String apiKey = '';
+  if (apiKey.isEmpty) {
+    throw Exception('YouTube API key is missing.');
+  }
 
   final Uri url = Uri.parse(
     'https://www.googleapis.com/youtube/v3/search'
@@ -50,12 +53,19 @@ Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
     '&key=$apiKey',
   );
 
+  print('YouTube API query: $query');
+  print('Full URL: $url');
+
   final response = await http.get(url);
+
+  print('YouTube API response: ${response.body}');
 
   if (response.statusCode == 200) {
     final data = json.decode(response.body);
-    final List items = data['items'];
-
+    final List items = data['items'] ?? [];
+    if (items.isEmpty) {
+      print('No items found in YouTube response.');
+    }
     final results = items.map<Map<String, String>>((item) {
       final title = item['snippet']['title'];
       final videoId = item['id']['videoId'];
@@ -71,12 +81,11 @@ Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
 
     return results;
   } else {
-    throw Exception('Failed to fetch videos. Status code: ${response.statusCode}');
+    throw Exception(
+        'Failed to fetch videos. Status code: ${response.statusCode}');
   }
 }
 
-void main() async {
-  final videos = await fetchYouTubeVideos('flutter tutorial');
-
-  print(jsonEncode(videos));
-}
+// Usage:
+//   final videos = await fetchYouTubeVideos(nextSubtopic);
+//   // nextSubtopic is a string, e.g. "Android Intents" or any subtopic name

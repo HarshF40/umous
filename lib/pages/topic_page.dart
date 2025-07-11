@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:umous/pages/quiz_page.dart';
 import 'package:umous/pages/timer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../utilities/progress_utils.dart';
+import '../utilities/topfivevid.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TopicPage extends StatefulWidget {
   final String topicName;
@@ -18,11 +21,31 @@ class _TopicPageState extends State<TopicPage> {
   bool isLoading = true;
   String? errorMsg;
 
+  // YouTube video state
+  List<Map<String, String>> ytVideos = [];
+  bool ytLoading = false;
+  String? ytError;
+
   @override
   void initState() {
     super.initState();
-    fetchSubtopics();
-    fetchCompletedSubtopics();
+    _loadAllAndFetchYouTube();
+  }
+
+  Future<void> _loadAllAndFetchYouTube() async {
+    await fetchSubtopics();
+    await fetchCompletedSubtopics();
+    final nextSubtopic =
+        getNextSubtopicForTopic(widget.topicName, subtopics, completed);
+    print('Next subtopic for YouTube: $nextSubtopic');
+    if (nextSubtopic != null && nextSubtopic.isNotEmpty) {
+      await fetchYouTubeForNextSubtopic(nextSubtopic);
+    } else {
+      setState(() {
+        ytError = 'All subtopics completed!';
+        ytLoading = false;
+      });
+    }
   }
 
   Future<void> fetchSubtopics() async {
@@ -101,15 +124,52 @@ class _TopicPageState extends State<TopicPage> {
   Future<void> saveCompletedSubtopics() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    await FirebaseFirestore.instance
+    final docRef = FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('topics')
         .doc('selected')
         .collection(widget.topicName)
-        .doc('progress')
-        .set({'completedSubtopics': completed.toList()},
-            SetOptions(merge: true));
+        .doc('progress');
+
+    String? nextSubtopic =
+        getNextSubtopicForTopic(widget.topicName, subtopics, completed);
+
+    await docRef.set({
+      'completedSubtopics': completed.toList(),
+      'nextSubtopic': nextSubtopic,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> fetchYouTubeForNextSubtopic(String nextSubtopic) async {
+    setState(() {
+      ytLoading = true;
+      ytError = null;
+      ytVideos = [];
+    });
+    try {
+      print('Fetching YouTube videos for: $nextSubtopic');
+      final videos = await fetchYouTubeVideos(nextSubtopic);
+      setState(() {
+        ytVideos = videos;
+        ytLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        ytLoading = false;
+        ytError = 'Failed to fetch YouTube videos.';
+      });
+    }
+  }
+
+  // Add this helper function to handle launching URLs
+  Future<void> _launchYouTubeUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -138,8 +198,10 @@ class _TopicPageState extends State<TopicPage> {
               )),
           IconButton(
               icon: const Icon(Icons.timer, color: Color(0xFF389bdc)),
-              onPressed: () {Navigator.of(context).push(
-                MaterialPageRoute(builder: (context)=>const TimerScreen()));}),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const TimerScreen()));
+              }),
         ],
       ),
       body: SingleChildScrollView(
@@ -186,6 +248,19 @@ class _TopicPageState extends State<TopicPage> {
                           }
                         });
                         await saveCompletedSubtopics();
+                        // Immediately fetch videos for the new next subtopic
+                        final nextSubtopic = getNextSubtopicForTopic(
+                            widget.topicName, subtopics, completed);
+                        if (nextSubtopic != null && nextSubtopic.isNotEmpty) {
+                          final ytQuery = '${widget.topicName} $nextSubtopic';
+                          await fetchYouTubeForNextSubtopic(ytQuery);
+                        } else {
+                          setState(() {
+                            ytError = 'All subtopics completed!';
+                            ytLoading = false;
+                            ytVideos = [];
+                          });
+                        }
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -272,62 +347,92 @@ class _TopicPageState extends State<TopicPage> {
               ),
             ),
             const SizedBox(height: 32),
+            // YouTube Videos Section
+            const Text('Suggestions for your next topic',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 10),
+            if (ytLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (ytError != null)
+              Text(ytError!, style: const TextStyle(color: Colors.red))
+            else if (ytVideos.isEmpty)
+              const Text('No videos found.')
+            else
+              SizedBox(
+                height: 240,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: ytVideos.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                  itemBuilder: (context, i) {
+                    final vid = ytVideos[i];
+                    return SizedBox(
+                      width: 200,
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        child: InkWell(
+                          onTap: () async {
+                            final url = vid['link'] ?? '';
+                            if (url.isNotEmpty) {
+                              await _launchYouTubeUrl(url);
+                            }
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12)),
+                                child: Image.network(
+                                  vid['thumbnail'] ?? '',
+                                  width: 200,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 200,
+                                    height: 120,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.broken_image),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  vid['title'] ?? '',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0, vertical: 8.0),
+                                child: TextButton(
+                                  onPressed: () async {
+                                    final url = vid['link'] ?? '';
+                                    if (url.isNotEmpty) {
+                                      await _launchYouTubeUrl(url);
+                                    }
+                                  },
+                                  child: const Text('Watch'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),
-    );
-  }
-}
-
-// Add a vertical roadmap widget
-class _VerticalRoadmapWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Mock roadmap data
-    final List<String> subtopics = [
-      'topic1',
-      'topic2',
-      'topic3',
-      'topic4',
-      'topic5',
-      'topic6',
-      'topic7',
-      'topic8',
-      'topic9',
-      'topic10'
-    ];
-    return ListView.builder(
-      itemCount: subtopics.length,
-      itemBuilder: (context, i) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade200,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                if (i != subtopics.length - 1)
-                  Container(
-                    width: 4,
-                    height: 32,
-                    color: Colors.blue.shade100,
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Text(
-              subtopics[i],
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-          ],
-        );
-      },
     );
   }
 }
