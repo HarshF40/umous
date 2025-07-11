@@ -1,12 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:umous/pages/chat.dart';
 import 'dart:math';
+import './choose_topics_page.dart';
+import './topic_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // User's selected topics (default to 4)
+  List<String> selectedTopics = [
+    'Python Programming',
+    'Data Structures',
+    'Operating Systems',
+    'Algorithms',
+  ];
+
+  void _chooseTopics() async {
+    final result = await Navigator.push<List<String>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChooseTopicsPage(
+          selectedTopics: selectedTopics,
+        ),
+      ),
+    );
+    setState(() {
+      if (result != null) {
+        selectedTopics = result;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // This list will later come from user selection/database
+    // final List<String> topics = [
+    //   'Python Programming',
+    //   'Data Structures',
+    //   'Operating Systems',
+    //   'Algorithms',
+    // ];
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -27,6 +65,26 @@ class HomePage extends StatelessWidget {
             onPressed: () {},
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text('Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.list_alt),
+              title: const Text('Choose Topics'),
+              onTap: () {
+                Navigator.pop(context);
+                _chooseTopics();
+              },
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -99,12 +157,9 @@ class HomePage extends StatelessWidget {
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 1.7,
-              children: const [
-                _LearningCard(title: 'Data Structures'),
-                _LearningCard(title: 'Machine Learning'),
-                _LearningCard(title: 'Operating Systems'),
-                _LearningCard(title: 'Algorithms'),
-              ],
+              children: selectedTopics
+                  .map((topic) => _LearningCard(topicName: topic))
+                  .toList(),
             ),
             const SizedBox(height: 28),
             // Productivity Chart
@@ -175,42 +230,53 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Refactor _LearningCard to accept topicName and navigate to TopicPage
 class _LearningCard extends StatelessWidget {
-  final String title;
-  const _LearningCard({required this.title});
+  final String topicName;
+  const _LearningCard({required this.topicName});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 170,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade100,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.shade100.withOpacity(0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              overflow: TextOverflow.ellipsis,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TopicPage(topicName: topicName)),
+        );
+      },
+      child: Container(
+        width: 170,
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade100,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.shade100.withOpacity(0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const Icon(Icons.arrow_forward_ios, size: 16),
-        ],
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                topicName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
       ),
     );
   }

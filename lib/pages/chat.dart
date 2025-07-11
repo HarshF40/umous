@@ -88,15 +88,15 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
     final url = Uri.parse("$_baseUrl?key=$_apiKey");
 
     final body = jsonEncode({
-  "contents": [
-    {
-      "parts": [
-        {"text": _systemPrompt},
-        {"text": userInput}
+      "contents": [
+        {
+          "parts": [
+            {"text": _systemPrompt},
+            {"text": userInput}
+          ]
+        }
       ]
-    }
-  ]
-});
+    });
 
     final response = await http.post(
       url,
@@ -159,90 +159,89 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
     }
   }
 
-Widget _buildMessageBubble(ChatMessage message) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: Row(
-      mainAxisAlignment:
-          message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (!message.isUser)
-          Container(
-            width: 32,
-            height: 32,
-            margin: const EdgeInsets.only(right: 12, top: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.school, color: Colors.white, size: 20),
-          ),
-        Flexible(
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
-            ),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: message.isUser
-                  ? Colors.white.withOpacity(0.9)
-                  : Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(20),
-                topRight: const Radius.circular(20),
-                bottomLeft: message.isUser
-                    ? const Radius.circular(20)
-                    : const Radius.circular(4),
-                bottomRight: message.isUser
-                    ? const Radius.circular(4)
-                    : const Radius.circular(20),
+  Widget _buildMessageBubble(ChatMessage message) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment:
+            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!message.isUser)
+            Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(right: 12, top: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
               ),
-              border: message.isUser
-                  ? null
-                  : Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
+              child: const Icon(Icons.school, color: Colors.white, size: 20),
             ),
-            child: MarkdownBody(
-              data: message.text,
-              styleSheet: MarkdownStyleSheet(
-                codeblockDecoration: BoxDecoration( 
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(18)
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: message.isUser
+                    ? Colors.white.withOpacity(0.9)
+                    : Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: message.isUser
+                      ? const Radius.circular(20)
+                      : const Radius.circular(4),
+                  bottomRight: message.isUser
+                      ? const Radius.circular(4)
+                      : const Radius.circular(20),
+                ),
+                border: message.isUser
+                    ? null
+                    : Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+              ),
+              child: MarkdownBody(
+                data: message.text,
+                styleSheet: MarkdownStyleSheet(
+                  codeblockDecoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(18)),
+                  p: TextStyle(
+                    color: message.isUser
+                        ? const Color(0xFF389bdc)
+                        : Color(0xFF000000),
+                    fontSize: 16,
+                    height: 1.4,
                   ),
-                p: TextStyle(
-                  color: message.isUser
-                      ? const Color(0xFF389bdc)
-                      : Color(0xFF000000),
-                  fontSize: 16,
-                  height: 1.4,
-                ),
-                code: const TextStyle(
-                  fontFamily: 'monospace',
-                  backgroundColor: Color(0xFF000000),
-                  color: Color(0xFFFFFFFF),
+                  code: const TextStyle(
+                    fontFamily: 'monospace',
+                    backgroundColor: Color(0xFF000000),
+                    color: Color(0xFFFFFFFF),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (message.isUser)
-          Container(
-            width: 32,
-            height: 32,
-            margin: const EdgeInsets.only(left: 12, top: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
+          if (message.isUser)
+            Container(
+              width: 32,
+              height: 32,
+              margin: const EdgeInsets.only(left: 12, top: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.person, color: Colors.white, size: 20),
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 20),
-          ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +256,8 @@ Widget _buildMessageBubble(ChatMessage message) {
         ),
         title: const Text(
           'AI Tutor',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+          style: TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
         ),
         centerTitle: true,
         actions: [
@@ -292,7 +292,8 @@ Widget _buildMessageBubble(ChatMessage message) {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+                    child: const Icon(Icons.smart_toy,
+                        color: Colors.white, size: 20),
                   ),
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -308,7 +309,8 @@ Widget _buildMessageBubble(ChatMessage message) {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -334,7 +336,8 @@ Widget _buildMessageBubble(ChatMessage message) {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.3), width: 1),
                     ),
                     child: TextField(
                       controller: _messageController,
@@ -342,9 +345,11 @@ Widget _buildMessageBubble(ChatMessage message) {
                       maxLines: null,
                       decoration: InputDecoration(
                         hintText: 'Ask me anything about your studies...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                        hintStyle:
+                            TextStyle(color: Colors.white.withOpacity(0.7)),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         suffixIcon: IconButton(
                           icon: Icon(
                             Icons.send,
@@ -368,4 +373,3 @@ Widget _buildMessageBubble(ChatMessage message) {
     );
   }
 }
-

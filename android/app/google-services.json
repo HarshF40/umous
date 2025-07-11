@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "139192087809",
+    "project_id": "umous-e35d7",
+    "storage_bucket": "umous-e35d7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:139192087809:android:9a56c4c3ad631628701700",
+        "android_client_info": {
+          "package_name": "com.example.umous"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLe9HZ1dwwYeum6g4881NYSWZMmBYoPKQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
