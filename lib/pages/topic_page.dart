@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:umous/pages/quiz_page.dart';
 import 'package:umous/pages/timer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -128,7 +129,7 @@ class _TopicPageState extends State<TopicPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () {},
+              onPressed: () {Navigator.of(context).push(MaterialPageRoute(builder: (context) => QuizPage(domainName: widget.topicName)));},
               child: Text(
                 "Quiz",
                 style: TextStyle(

@@ -5,6 +5,21 @@ const String _geminiApiKey = '';
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
+String _stripMarkdownJson(String responseText) {
+  // Remove leading ```json[ or ```JSON[ (with optional space/newline)
+  String cleaned = responseText.replaceAllMapped(
+    RegExp(r'```(?:json|JSON)\s*\['),
+    (_) => '[',
+  );
+  // Remove trailing ]``` (with optional whitespace before backticks)
+  cleaned = cleaned.replaceAllMapped(
+    RegExp(r'\]\s*```'),
+    (_) => ']',
+  );
+  return cleaned.trim();
+}
+
+
 Future<List<Map<String, dynamic>>> generateQuizFromTopics(List<String> topics) async {
   final String topicPrompt = topics.join(', ');
   final String prompt = '''
@@ -39,6 +54,7 @@ $topicPrompt
 - `a`, `b`, `c`, `d` are answer options
 - `co` is the correct answer label ("a" / "b" / "c" / "d")
 - Make sure the JSON is valid and parseable.
+- Make sure you dont add any special character like backtick and all which will break JSON parsing, DONOT add backticks in any form, not for formating text also, strictly no
 ''';
 
   final response = await http.post(
@@ -71,7 +87,8 @@ $topicPrompt
 
       try {
         // Parse the JSON block from response text
-        final quizData = jsonDecode(responseText);
+          final cleanedJson = _stripMarkdownJson(responseText);
+        final quizData = jsonDecode(cleanedJson);
         if (quizData is List) {
           return List<Map<String, dynamic>>.from(quizData);
         } else {
