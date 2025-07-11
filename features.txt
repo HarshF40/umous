@@ -1,14 +1,9 @@
-LLM as tutor -  Chatting with LLM to talk about Studies and learning
+LLM as tutor -  Chatting with LLM to talk about Studies and learning - done
+roadmap generator - scraped from roadmap.sh rendered on html - done
+personilized quiz - use LLM to generate quiz and flash card - done
+youtube video / playlist ranking and suggestion - done
 
 productivity tracker - Like github contribution calender - functionalities remaining - ui done
-roadmap generator - scraped from roadmap.sh rendered on html - Half done
-personilized quiz - use LLM to generate quiz and flash card - remaining
-youtube video / playlist ranking and suggestion - functionalities done
 Create groups with friend to study - Add friends to study together manage resources, strict group study, ranking - based on quizes and productivity tracker - remaining
 on the bottom of home page a section which consist of all the topics you are learning and then after clicking on that topic you will get personilized view on that topic, the personilized git calendar chart for the partucular topic, graph and other analytics, the group members who are learning same topic - remaining
 
--timer
--quiz 
-- points 
-
-- user database
