@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TopicPage extends StatefulWidget {
   final String topicName;
@@ -19,6 +20,7 @@ class _TopicPageState extends State<TopicPage> {
   void initState() {
     super.initState();
     fetchSubtopics();
+    fetchCompletedSubtopics();
   }
 
   Future<void> fetchSubtopics() async {
@@ -73,6 +75,39 @@ class _TopicPageState extends State<TopicPage> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> fetchCompletedSubtopics() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('topics')
+        .doc('selected')
+        .collection(widget.topicName)
+        .doc('progress')
+        .get();
+    final data = doc.data();
+    if (data != null && data['completedSubtopics'] is List) {
+      setState(() {
+        completed = Set<String>.from(data['completedSubtopics']);
+      });
+    }
+  }
+
+  Future<void> saveCompletedSubtopics() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('topics')
+        .doc('selected')
+        .collection(widget.topicName)
+        .doc('progress')
+        .set({'completedSubtopics': completed.toList()},
+            SetOptions(merge: true));
   }
 
   @override
@@ -139,7 +174,7 @@ class _TopicPageState extends State<TopicPage> {
                     final topic = subtopics[i];
                     final isDone = completed.contains(topic);
                     return GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         setState(() {
                           if (isDone) {
                             completed.remove(topic);
@@ -147,6 +182,7 @@ class _TopicPageState extends State<TopicPage> {
                             completed.add(topic);
                           }
                         });
+                        await saveCompletedSubtopics();
                       },
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
