@@ -24,7 +24,7 @@ class _ChatTutorState extends State<ChatTutor> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
-  static const String _apiKey = 'API_KEY'; // Replace with your key
+  static const String _apiKey = ''; // Replace with your key
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
