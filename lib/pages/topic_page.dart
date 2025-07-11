@@ -26,10 +26,15 @@ class _TopicPageState extends State<TopicPage> {
   bool ytLoading = false;
   String? ytError;
 
+  int totalQuestionsAnswered = 0;
+  int totalCorrectAnswers = 0;
+  String todayTimeSpent = '0h 0m 0s';
+
   @override
   void initState() {
     super.initState();
     _loadAllAndFetchYouTube();
+    _fetchStats();
   }
 
   Future<void> _loadAllAndFetchYouTube() async {
@@ -162,6 +167,49 @@ class _TopicPageState extends State<TopicPage> {
     }
   }
 
+  Future<void> _fetchStats() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final quizzesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('topics')
+        .doc('selected')
+        .collection(widget.topicName)
+        .doc('quizzes');
+    final timesRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('topics')
+        .doc('selected')
+        .collection(widget.topicName)
+        .doc('times');
+    int quizCount = 0;
+    int correct = 0;
+    int questionsPerQuiz = 10; // Change if dynamic
+    try {
+      final quizDoc = await quizzesRef.get();
+      if (quizDoc.exists && quizDoc.data() != null) {
+        final data = quizDoc.data()!;
+        quizCount = data.length;
+        correct = data.values.fold(0, (sum, v) => sum + (v is int ? v : 0));
+      }
+      final timeDoc = await timesRef.get();
+      if (timeDoc.exists && timeDoc.data() != null) {
+        final today = DateTime.now();
+        final dateStr =
+            '${today.year.toString().padLeft(4, '0')}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+        todayTimeSpent = timeDoc.data()![dateStr] ?? '0h 0m 0s';
+      }
+    } catch (e) {
+      // ignore errors for now
+    }
+    setState(() {
+      totalQuestionsAnswered = quizCount * questionsPerQuiz;
+      totalCorrectAnswers = correct;
+    });
+  }
+
   // Add this helper function to handle launching URLs
   Future<void> _launchYouTubeUrl(String url) async {
     final uri = Uri.parse(url);
@@ -189,7 +237,11 @@ class _TopicPageState extends State<TopicPage> {
         ),
         actions: [
           TextButton(
-              onPressed: () {Navigator.of(context).push(MaterialPageRoute(builder: (context) => QuizPage(domainName: widget.topicName)));},
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        QuizPage(domainName: widget.topicName)));
+              },
               child: Text(
                 "Quiz",
                 style: TextStyle(
@@ -200,7 +252,8 @@ class _TopicPageState extends State<TopicPage> {
               icon: const Icon(Icons.timer, color: Color(0xFF389bdc)),
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => const TimerScreen()));
+                    builder: (context) =>
+                        TimerScreen(topicName: widget.topicName)));
               }),
         ],
       ),
@@ -312,23 +365,26 @@ class _TopicPageState extends State<TopicPage> {
               ),
             const SizedBox(height: 32),
             // Your Story/Stats Section
-            const Text('Your Stats',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Your Stats',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                IconButton(
+                  icon: Icon(Icons.refresh, color: Colors.blue),
+                  onPressed: _fetchStats,
+                  tooltip: 'Refresh Stats',
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: _StatCard(
-                label: 'Quizzes Solved',
-                child: _QuizzesSolvedCounter(solved: 12, total: 20, size: 56),
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: _StatCard(
-                label: 'Avg. Score',
-                child: const Text('82%',
-                    style: TextStyle(
+                label: 'Correct Answers',
+                child: Text('$totalCorrectAnswers',
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 32,
                         color: Colors.blue)),
@@ -338,9 +394,38 @@ class _TopicPageState extends State<TopicPage> {
             SizedBox(
               width: double.infinity,
               child: _StatCard(
-                label: 'Total Time Spent',
-                child: const Text('2h 15m',
-                    style: TextStyle(
+                label: 'Total Questions Answered',
+                child: Text('$totalQuestionsAnswered',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                        color: Colors.blue)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Average Quiz Score Card
+            SizedBox(
+              width: double.infinity,
+              child: _StatCard(
+                label: 'Average Quiz Score',
+                child: Text(
+                  totalQuestionsAnswered > 0
+                      ? '${((totalCorrectAnswers / totalQuestionsAnswered) * 100).round()}%'
+                      : '0%',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                      color: Colors.blue),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: _StatCard(
+                label: 'Total Time Spent Today',
+                child: Text(todayTimeSpent,
+                    style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 28,
                         color: Colors.blue)),

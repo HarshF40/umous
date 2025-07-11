@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String _geminiApiKey = '';
+const String _geminiApiKey = 'AIzaSyCdpHKn9GdOxUsA-h6A9nLZxBeLAIFj6Dc';
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
@@ -19,8 +19,8 @@ String _stripMarkdownJson(String responseText) {
   return cleaned.trim();
 }
 
-
-Future<List<Map<String, dynamic>>> generateQuizFromTopics(List<String> topics) async {
+Future<List<Map<String, dynamic>>> generateQuizFromTopics(
+    List<String> topics) async {
   final String topicPrompt = topics.join(', ');
   final String prompt = '''
 You are an expert quiz generator.
@@ -87,7 +87,7 @@ $topicPrompt
 
       try {
         // Parse the JSON block from response text
-          final cleanedJson = _stripMarkdownJson(responseText);
+        final cleanedJson = _stripMarkdownJson(responseText);
         final quizData = jsonDecode(cleanedJson);
         if (quizData is List) {
           return List<Map<String, dynamic>>.from(quizData);
