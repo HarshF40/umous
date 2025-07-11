@@ -46,8 +46,11 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
           .map((e) => (e as Map).keys.first.toString().trim())
           .toList();
       topics.sort();
+      // Filter _chosen to only include topics that exist in _topics
+      final filteredChosen = _chosen.where((t) => topics.contains(t)).toList();
       setState(() {
         _topics = topics;
+        _chosen = filteredChosen;
         _loading = false;
       });
     } catch (e) {
@@ -75,33 +78,50 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Select up to 4 topics:',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold)),
+                              Text(
+                                'Select up to 4 topics: (${_chosen.length}/4)',
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
                               const SizedBox(height: 16),
                               Expanded(
                                 child: ListView.builder(
                                   itemCount: _topics.length,
                                   itemBuilder: (context, index) {
-                                    final topic = _topics[index].trim();
+                                    final topic = _topics[index];
                                     final selected = _chosen.contains(topic);
-                                    return CheckboxListTile(
-                                      title: Text(topic),
-                                      value: selected,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          if (val == true) {
-                                            if (_chosen.length < 4) {
-                                              _chosen.add(topic);
+                                    return Card(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 2),
+                                      child: CheckboxListTile(
+                                        key: ValueKey(topic),
+                                        title: Text(topic),
+                                        value: selected,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            if (val == true) {
+                                              if (_chosen.length < 4) {
+                                                _chosen.add(topic);
+                                              } else {
+                                                // Show message when limit reached
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                        'Maximum 4 topics allowed'),
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              }
+                                            } else {
+                                              _chosen.remove(topic);
                                             }
-                                          } else {
-                                            _chosen.remove(topic);
-                                          }
-                                        });
-                                      },
-                                      controlAffinity:
-                                          ListTileControlAffinity.leading,
+                                          });
+                                        },
+                                        controlAffinity:
+                                            ListTileControlAffinity.leading,
+                                      ),
                                     );
                                   },
                                 ),
@@ -149,21 +169,43 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
+            onPressed: () {
               final newTopic = controller.text.trim();
               if (newTopic.isNotEmpty) {
-                handleNewTopic(newTopic);
+                // Add the new topic to the local list
+                setState(() {
+                  _topics.add(newTopic);
+                  _topics.sort();
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('Topic "$newTopic" added successfully')),
+                );
               }
               Navigator.pop(context);
-              await Future.delayed(const Duration(milliseconds: 100));
-              setState(() {
-                _saving = true;
-              });
             },
             child: const Text('Add'),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TopicCheckbox extends StatelessWidget {
+  final String topic;
+  final bool selected;
+  final ValueChanged<bool?> onChanged;
+  const _TopicCheckbox(
+      {required this.topic, required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      title: Text(topic),
+      value: selected,
+      onChanged: onChanged,
+      controlAffinity: ListTileControlAffinity.leading,
     );
   }
 }
