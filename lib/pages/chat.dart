@@ -58,12 +58,14 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
 
   void _addWelcomeMessage() {
     setState(() {
-      _messages.add(ChatMessage(
-        text:
-            "Hello! I'm your AI tutor. I'm here to help you with your studies, homework, and learning any subject. What would you like to learn about today?",
-        isUser: false,
-        time: DateTime.now(),
-      ));
+      _messages.add(
+        ChatMessage(
+          text:
+              "Hello! I'm your AI tutor. I'm here to help you with your studies, homework, and learning any subject. What would you like to learn about today?",
+          isUser: false,
+          time: DateTime.now(),
+        ),
+      );
     });
   }
 
@@ -92,10 +94,10 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
         {
           "parts": [
             {"text": _systemPrompt},
-            {"text": userInput}
-          ]
-        }
-      ]
+            {"text": userInput},
+          ],
+        },
+      ],
     });
 
     final response = await http.post(
@@ -123,11 +125,9 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
     _messageController.clear();
 
     setState(() {
-      _messages.add(ChatMessage(
-        text: userMessage,
-        isUser: true,
-        time: DateTime.now(),
-      ));
+      _messages.add(
+        ChatMessage(text: userMessage, isUser: true, time: DateTime.now()),
+      );
       _isLoading = true;
     });
 
@@ -137,46 +137,167 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
       final response = await _sendToGemini(userMessage);
 
       setState(() {
-        _messages.add(ChatMessage(
-          text: response,
-          isUser: false,
-          time: DateTime.now(),
-        ));
+        _messages.add(
+          ChatMessage(text: response, isUser: false, time: DateTime.now()),
+        );
         _isLoading = false;
       });
 
       _scrollToBottom();
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(
-          text:
-              "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
-          isUser: false,
-          time: DateTime.now(),
-        ));
+        _messages.add(
+          ChatMessage(
+            text:
+                "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+            isUser: false,
+            time: DateTime.now(),
+          ),
+        );
         _isLoading = false;
       });
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF6366F1)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'AI Tutor',
+          style: TextStyle(
+            color: Color(0xFF6366F1),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xFF6366F1)),
+            onPressed: _clearChat,
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: _messages.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 64,
+                            color: Colors.white70,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Start a conversation with your AI tutor',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        return _buildMessageBubble(message);
+                      },
+                    ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.transparent,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        style: const TextStyle(color: Color(0xFF1E293B)),
+                        maxLines: null,
+                        decoration: const InputDecoration(
+                          hintText: 'Ask me anything about your studies...',
+                          hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                        ),
+                        onSubmitted: (_) => _isLoading ? null : _sendMessage(),
+                        enabled: !_isLoading,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage message) {
+    final isUser = message.isUser;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!message.isUser)
+          if (!isUser)
             Container(
               width: 32,
               height: 32,
               margin: const EdgeInsets.only(right: 12, top: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xFF6366F1).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.school, color: Colors.white, size: 20),
+              child: const Icon(
+                Icons.school,
+                color: Color(0xFF6366F1),
+                size: 20,
+              ),
             ),
           Flexible(
             child: Container(
@@ -185,189 +306,68 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
               ),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: message.isUser
-                    ? Colors.white.withOpacity(0.9)
-                    : Colors.white.withOpacity(0.2),
+                color: isUser ? const Color(0xFF6366F1) : Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
-                  bottomLeft: message.isUser
+                  bottomLeft: isUser
                       ? const Radius.circular(20)
                       : const Radius.circular(4),
-                  bottomRight: message.isUser
+                  bottomRight: isUser
                       ? const Radius.circular(4)
                       : const Radius.circular(20),
                 ),
-                border: message.isUser
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.07),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                border: isUser
                     ? null
-                    : Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
-                      ),
+                    : Border.all(color: const Color(0xFFE2E8F0), width: 1),
               ),
               child: MarkdownBody(
                 data: message.text,
                 styleSheet: MarkdownStyleSheet(
                   codeblockDecoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(18)),
+                    color: isUser
+                        ? Colors.white.withOpacity(0.15)
+                        : const Color(0xFF6366F1).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   p: TextStyle(
-                    color: message.isUser
-                        ? const Color(0xFF389bdc)
-                        : Color(0xFF000000),
+                    color: isUser ? Colors.white : const Color(0xFF1E293B),
                     fontSize: 16,
                     height: 1.4,
                   ),
-                  code: const TextStyle(
+                  code: TextStyle(
                     fontFamily: 'monospace',
-                    backgroundColor: Color(0xFF000000),
-                    color: Color(0xFFFFFFFF),
+                    backgroundColor: isUser
+                        ? Colors.white.withOpacity(0.15)
+                        : const Color(0xFF6366F1).withOpacity(0.08),
+                    color: isUser ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
               ),
             ),
           ),
-          if (message.isUser)
+          if (isUser)
             Container(
               width: 32,
               height: 32,
               margin: const EdgeInsets.only(left: 12, top: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xFF6366F1).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 20),
-            ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF389bdc),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF389bdc),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'AI Tutor',
-          style: TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: _clearChat,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return _buildMessageBubble(_messages[index]);
-              },
-            ),
-          ),
-          if (_isLoading)
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.smart_toy,
-                        color: Colors.white, size: 20),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Tutor is thinking...',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              child: const Icon(
+                Icons.person,
+                color: Color(0xFF6366F1),
+                size: 20,
               ),
             ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                          color: Colors.white.withOpacity(0.3), width: 1),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      style: const TextStyle(color: Colors.white),
-                      maxLines: null,
-                      decoration: InputDecoration(
-                        hintText: 'Ask me anything about your studies...',
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            Icons.send,
-                            color: _isLoading
-                                ? Colors.white.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.7),
-                          ),
-                          onPressed: _isLoading ? null : _sendMessage,
-                        ),
-                      ),
-                      onSubmitted: (_) => _isLoading ? null : _sendMessage(),
-                      enabled: !_isLoading,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

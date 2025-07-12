@@ -30,6 +30,8 @@ class _TopicPageState extends State<TopicPage> {
   int totalCorrectAnswers = 0;
   String todayTimeSpent = '0h 0m 0s';
 
+  bool _disposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,16 +39,29 @@ class _TopicPageState extends State<TopicPage> {
     _fetchStats();
   }
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  // --- Fix setState() after dispose ---
+  void safeSetState(VoidCallback fn) {
+    if (mounted && !_disposed) setState(fn);
+  }
+
   Future<void> _loadAllAndFetchYouTube() async {
     await fetchSubtopics();
     await fetchCompletedSubtopics();
-    final nextSubtopic =
-        getNextSubtopicForTopic(widget.topicName, subtopics, completed);
-    print('Next subtopic for YouTube: $nextSubtopic');
+    final nextSubtopic = getNextSubtopicForTopic(
+      widget.topicName,
+      subtopics,
+      completed,
+    );
     if (nextSubtopic != null && nextSubtopic.isNotEmpty) {
       await fetchYouTubeForNextSubtopic(nextSubtopic);
     } else {
-      setState(() {
+      safeSetState(() {
         ytError = 'All subtopics completed!';
         ytLoading = false;
       });
@@ -54,7 +69,7 @@ class _TopicPageState extends State<TopicPage> {
   }
 
   Future<void> fetchSubtopics() async {
-    setState(() {
+    safeSetState(() {
       isLoading = true;
       errorMsg = null;
     });
@@ -64,7 +79,7 @@ class _TopicPageState extends State<TopicPage> {
           .doc('topics')
           .get();
       if (!doc.exists || doc.data() == null) {
-        setState(() {
+        safeSetState(() {
           subtopics = [];
           errorMsg = 'No roadmap found.';
           isLoading = false;
@@ -82,7 +97,7 @@ class _TopicPageState extends State<TopicPage> {
         }
       }
       if (roadmapString == null || roadmapString.trim().isEmpty) {
-        setState(() {
+        safeSetState(() {
           subtopics = [];
           errorMsg = 'No subtopics found for this topic.';
           isLoading = false;
@@ -94,12 +109,12 @@ class _TopicPageState extends State<TopicPage> {
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
-      setState(() {
+      safeSetState(() {
         isLoading = false;
         errorMsg = null;
       });
     } catch (e) {
-      setState(() {
+      safeSetState(() {
         subtopics = [];
         errorMsg = 'Error loading roadmap.';
         isLoading = false;
@@ -120,7 +135,7 @@ class _TopicPageState extends State<TopicPage> {
         .get();
     final data = doc.data();
     if (data != null && data['completedSubtopics'] is List) {
-      setState(() {
+      safeSetState(() {
         completed = Set<String>.from(data['completedSubtopics']);
       });
     }
@@ -137,8 +152,11 @@ class _TopicPageState extends State<TopicPage> {
         .collection(widget.topicName)
         .doc('progress');
 
-    String? nextSubtopic =
-        getNextSubtopicForTopic(widget.topicName, subtopics, completed);
+    String? nextSubtopic = getNextSubtopicForTopic(
+      widget.topicName,
+      subtopics,
+      completed,
+    );
 
     await docRef.set({
       'completedSubtopics': completed.toList(),
@@ -147,20 +165,19 @@ class _TopicPageState extends State<TopicPage> {
   }
 
   Future<void> fetchYouTubeForNextSubtopic(String nextSubtopic) async {
-    setState(() {
+    safeSetState(() {
       ytLoading = true;
       ytError = null;
       ytVideos = [];
     });
     try {
-      print('Fetching YouTube videos for: $nextSubtopic');
       final videos = await fetchYouTubeVideos(nextSubtopic);
-      setState(() {
+      safeSetState(() {
         ytVideos = videos;
         ytLoading = false;
       });
     } catch (e) {
-      setState(() {
+      safeSetState(() {
         ytLoading = false;
         ytError = 'Failed to fetch YouTube videos.';
       });
@@ -204,10 +221,12 @@ class _TopicPageState extends State<TopicPage> {
     } catch (e) {
       // ignore errors for now
     }
-    setState(() {
-      totalQuestionsAnswered = quizCount * questionsPerQuiz;
-      totalCorrectAnswers = correct;
-    });
+    if (mounted && !_disposed) {
+      setState(() {
+        totalQuestionsAnswered = quizCount * questionsPerQuiz;
+        totalCorrectAnswers = correct;
+      });
+    }
   }
 
   // Add this helper function to handle launching URLs
@@ -223,38 +242,46 @@ class _TopicPageState extends State<TopicPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white.withOpacity(0.85),
         elevation: 0,
         title: Text(
           widget.topicName,
           style: const TextStyle(
-            color: Colors.black,
+            color: Color(0xFF6366F1),
             fontWeight: FontWeight.bold,
             fontSize: 26,
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        QuizPage(domainName: widget.topicName)));
-              },
-              child: Text(
-                "Quiz",
-                style: TextStyle(
-                  color: Color(0xFF389bdc),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => QuizPage(domainName: widget.topicName),
                 ),
-              )),
+              );
+            },
+            child: const Text(
+              "Quiz",
+              style: TextStyle(
+                color: Color(0xFF6366F1),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           IconButton(
-              icon: const Icon(Icons.timer, color: Color(0xFF389bdc)),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        TimerScreen(topicName: widget.topicName)));
-              }),
+            icon: const Icon(Icons.timer, color: Color(0xFF6366F1)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TimerScreen(topicName: widget.topicName),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -262,21 +289,29 @@ class _TopicPageState extends State<TopicPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Roadmap
-            const Text('Roadmap',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Roadmap',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Color(0xFF1E293B),
+              ),
+            ),
             const SizedBox(height: 10),
             if (isLoading)
               const Center(
-                  child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: CircularProgressIndicator(),
-              ))
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (errorMsg != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
-                child:
-                    Text(errorMsg!, style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  errorMsg!,
+                  style: const TextStyle(color: Colors.red),
+                ),
               )
             else if (subtopics.isEmpty)
               const Padding(
@@ -293,7 +328,7 @@ class _TopicPageState extends State<TopicPage> {
                     final isDone = completed.contains(topic);
                     return GestureDetector(
                       onTap: () async {
-                        setState(() {
+                        safeSetState(() {
                           if (isDone) {
                             completed.remove(topic);
                           } else {
@@ -301,14 +336,16 @@ class _TopicPageState extends State<TopicPage> {
                           }
                         });
                         await saveCompletedSubtopics();
-                        // Immediately fetch videos for the new next subtopic
                         final nextSubtopic = getNextSubtopicForTopic(
-                            widget.topicName, subtopics, completed);
+                          widget.topicName,
+                          subtopics,
+                          completed,
+                        );
                         if (nextSubtopic != null && nextSubtopic.isNotEmpty) {
                           final ytQuery = '${widget.topicName} $nextSubtopic';
                           await fetchYouTubeForNextSubtopic(ytQuery);
                         } else {
-                          setState(() {
+                          safeSetState(() {
                             ytError = 'All subtopics completed!';
                             ytLoading = false;
                             ytVideos = [];
@@ -326,23 +363,32 @@ class _TopicPageState extends State<TopicPage> {
                                 decoration: BoxDecoration(
                                   color: isDone
                                       ? Colors.green
-                                      : Colors.blue.shade200,
+                                      : const Color(
+                                          0xFF6366F1,
+                                        ).withOpacity(0.18),
                                   shape: BoxShape.circle,
                                   border: isDone
                                       ? Border.all(
-                                          color: Colors.green, width: 2)
+                                          color: Colors.green,
+                                          width: 2,
+                                        )
                                       : null,
                                 ),
                                 child: isDone
-                                    ? const Icon(Icons.check,
-                                        color: Colors.white, size: 16)
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 16,
+                                      )
                                     : null,
                               ),
                               if (i != subtopics.length - 1)
                                 Container(
                                   width: 4,
                                   height: 32,
-                                  color: Colors.blue.shade100,
+                                  color: const Color(
+                                    0xFF6366F1,
+                                  ).withOpacity(0.10),
                                 ),
                             ],
                           ),
@@ -352,9 +398,12 @@ class _TopicPageState extends State<TopicPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: isDone ? Colors.green : Colors.black87,
-                              decoration:
-                                  isDone ? TextDecoration.lineThrough : null,
+                              color: isDone
+                                  ? Colors.green
+                                  : const Color(0xFF1E293B),
+                              decoration: isDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                           ),
                         ],
@@ -368,9 +417,10 @@ class _TopicPageState extends State<TopicPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Your Stats',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const Text(
+                  'Your Stats',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue),
                   onPressed: _fetchStats,
@@ -383,11 +433,14 @@ class _TopicPageState extends State<TopicPage> {
               width: double.infinity,
               child: _StatCard(
                 label: 'Correct Answers',
-                child: Text('$totalCorrectAnswers',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                        color: Colors.blue)),
+                child: Text(
+                  '$totalCorrectAnswers',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    color: Colors.blue,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 18),
@@ -395,11 +448,14 @@ class _TopicPageState extends State<TopicPage> {
               width: double.infinity,
               child: _StatCard(
                 label: 'Total Questions Answered',
-                child: Text('$totalQuestionsAnswered',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                        color: Colors.blue)),
+                child: Text(
+                  '$totalQuestionsAnswered',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    color: Colors.blue,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 18),
@@ -413,9 +469,10 @@ class _TopicPageState extends State<TopicPage> {
                       ? '${((totalCorrectAnswers / totalQuestionsAnswered) * 100).round()}%'
                       : '0%',
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                      color: Colors.blue),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                    color: Colors.blue,
+                  ),
                 ),
               ),
             ),
@@ -424,17 +481,22 @@ class _TopicPageState extends State<TopicPage> {
               width: double.infinity,
               child: _StatCard(
                 label: 'Total Time Spent Today',
-                child: Text(todayTimeSpent,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28,
-                        color: Colors.blue)),
+                child: Text(
+                  todayTimeSpent,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                    color: Colors.blue,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 32),
             // YouTube Videos Section
-            const Text('Suggestions for your next topic',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const Text(
+              'Suggestions for your next topic',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
             const SizedBox(height: 10),
             if (ytLoading)
               const Center(child: CircularProgressIndicator())
@@ -454,9 +516,11 @@ class _TopicPageState extends State<TopicPage> {
                     return SizedBox(
                       width: 200,
                       child: Card(
-                        elevation: 2,
+                        elevation: 0,
+                        color: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         child: InkWell(
                           onTap: () async {
                             final url = vid['link'] ?? '';
@@ -469,7 +533,8 @@ class _TopicPageState extends State<TopicPage> {
                             children: [
                               ClipRRect(
                                 borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(12)),
+                                  top: Radius.circular(16),
+                                ),
                                 child: Image.network(
                                   vid['thumbnail'] ?? '',
                                   width: 200,
@@ -478,33 +543,64 @@ class _TopicPageState extends State<TopicPage> {
                                   errorBuilder: (_, __, ___) => Container(
                                     width: 200,
                                     height: 120,
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.broken_image),
+                                    color: const Color(0xFFE0E7FF),
+                                    child: const Icon(
+                                      Icons.broken_image,
+                                      color: Color(0xFF6366F1),
+                                    ),
                                   ),
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(12.0),
                                 child: Text(
                                   vid['title'] ?? '',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.w500),
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E293B),
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 8),
+                              const Spacer(),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8.0, vertical: 8.0),
-                                child: TextButton(
-                                  onPressed: () async {
-                                    final url = vid['link'] ?? '';
-                                    if (url.isNotEmpty) {
-                                      await _launchYouTubeUrl(url);
-                                    }
-                                  },
-                                  child: const Text('Watch'),
+                                  horizontal: 12.0,
+                                  vertical: 12.0,
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF6366F1),
+                                        Color(0xFF8B5CF6),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextButton(
+                                    onPressed: () async {
+                                      final url = vid['link'] ?? '';
+                                      if (url.isNotEmpty) {
+                                        await _launchYouTubeUrl(url);
+                                      }
+                                    },
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 8,
+                                      ),
+                                      textStyle: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: const Text('Watch'),
+                                  ),
                                 ),
                               ),
                             ],
@@ -530,10 +626,19 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      color: Colors.blue.shade50,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         child: Column(
@@ -545,10 +650,11 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                  fontSize: 17,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.2),
+                fontSize: 17,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -563,8 +669,11 @@ class _QuizzesSolvedCounter extends StatelessWidget {
   final int solved;
   final int total;
   final double size;
-  const _QuizzesSolvedCounter(
-      {required this.solved, required this.total, this.size = 60});
+  const _QuizzesSolvedCounter({
+    required this.solved,
+    required this.total,
+    this.size = 60,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -584,9 +693,10 @@ class _QuizzesSolvedCounter extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
               ),
             ),
-            Text('$solved/$total',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              '$solved/$total',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -612,13 +722,17 @@ class _QuizPerformanceStat extends StatelessWidget {
             color: Colors.blue.shade50,
             shape: BoxShape.circle,
           ),
-          child: Text('$average%',
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          child: Text(
+            '$average%',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
         ),
         const SizedBox(height: 10),
-        const Text('Avg. Score',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 15)),
+        const Text(
+          'Avg. Score',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15),
+        ),
       ],
     );
   }
@@ -651,13 +765,17 @@ class _TimeSpentStat extends StatelessWidget {
             color: Colors.blue.shade50,
             shape: BoxShape.circle,
           ),
-          child: Text(timeString,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          child: Text(
+            timeString,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
         ),
         const SizedBox(height: 10),
-        const Text('Time Spent',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 15)),
+        const Text(
+          'Time Spent',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 15),
+        ),
       ],
     );
   }
