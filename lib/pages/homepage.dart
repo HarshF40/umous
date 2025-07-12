@@ -249,7 +249,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            'Study Hub',
+                            'umous',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,

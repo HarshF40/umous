@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-const String _geminiApiKey = 'AIzaSyCdpHKn9GdOxUsA-h6A9nLZxBeLAIFj6Dc';
+final String _geminiApiKey = dotenv.env['GEMINI_KEY']!;
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 

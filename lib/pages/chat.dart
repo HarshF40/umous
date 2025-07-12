@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:convert';
@@ -24,8 +25,7 @@ class _ChatTutorState extends State<ChatTutor> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
-  static const String _apiKey =
-      'AIzaSyCdpHKn9GdOxUsA-h6A9nLZxBeLAIFj6Dc'; // Replace with your key
+  final String _apiKey = dotenv.env['GEMINI_KEY']!; // Replace with your key
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
