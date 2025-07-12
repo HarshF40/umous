@@ -176,6 +176,7 @@ class _ChooseTopicsPageState extends State<ChooseTopicsPage> {
               ],
             ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'choose_topics_fab',
         onPressed: _showAddTopicDialog,
         child: const Icon(Icons.add),
         tooltip: 'Add New Topic',

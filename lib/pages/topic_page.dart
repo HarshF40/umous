@@ -284,10 +284,10 @@ class _TopicPageState extends State<TopicPage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
+          physics: const BouncingScrollPhysics(),
           children: [
             const Text(
               'Roadmap',
@@ -506,7 +506,7 @@ class _TopicPageState extends State<TopicPage> {
               const Text('No videos found.')
             else
               SizedBox(
-                height: 240,
+                height: 250,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: ytVideos.length,
@@ -563,7 +563,9 @@ class _TopicPageState extends State<TopicPage> {
                                   ),
                                 ),
                               ),
-                              const Spacer(),
+                              SizedBox(
+                                height: 0,
+                              ), // replaces Spacer to avoid overflow
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12.0,
@@ -640,7 +642,7 @@ class _StatCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,

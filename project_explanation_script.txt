@@ -1,0 +1,54 @@
+UMOUS Project Video Script
+===========================
+
+[Opening Scene]
+Hello and welcome! Today, we’re excited to introduce you to **Umous**, a modern productivity and learning app
+designed to help students and lifelong learners organize, plan, and track their progress—all in one beautiful,
+easy-to-use platform.
+
+[App Introduction]
+Let’s dive in and explore what makes Umous special.
+
+[Homepage]
+When you open the app, you’re greeted by a clean, modern homepage with a soothing blue and purple gradient.
+At the top, you’ll find the **Today’s Plan** card—a space where you can jot down your daily goals or notes. Simply tap,
+type your plan, and it’s saved instantly, so you can stay focused and organized throughout the day.
+
+[Learning Cards]
+Below, you’ll see a grid of **Learning Cards**. Each card represents a subject or topic you’re working on,
+like Data Structures, Algorithms, or Machine Learning. The cards are visually appealing, with clear icons and consistent
+colors, making it easy to find what you need at a glance. Tap a card to dive deeper into the topic, access resources,
+or track your progress.
+
+[Productivity Chart]
+To help you stay motivated, Umous features a **Productivity Chart** right on the homepage. This chart gives you a
+quick overview of your recent activity, so you can celebrate your achievements and spot areas for improvement.
+
+[Groups Feature]
+Learning is better together! The **Groups** tab lets you join or create study groups, collaborate with peers,
+and share resources. The group cards match the app’s modern color scheme, ensuring a consistent and inviting experience.
+
+[Chat Page]
+Need help or want to discuss a topic? The **Chat** page connects you with a smart assistant. The chat interface
+is designed for clarity and comfort: your messages appear in indigo bubbles, while the assistant’s responses are
+in white, making conversations easy to follow.
+
+[Profile Page]
+Your **Profile** page showcases your avatar, name, and progress, all styled with the app’s signature gradient
+and clean white cards. It’s a personal space to track your journey and achievements.
+
+[Design and User Experience]
+Throughout Umous, we’ve focused on a modern, unified design. The color palette is consistent, with gradients,
+white cards, and smooth rounded corners. Every page is optimized for readability and ease of use, whether
+you’re planning your day, learning something new, or chatting with friends.
+
+[Technical Highlights]
+Umous is built with Flutter, ensuring smooth performance across Android, iOS, web, and desktop. We use
+Firestore for real-time data storage, so your notes and progress are always up to date. The app is robust,
+with careful handling of async operations and state management to ensure a seamless experience.
+
+[Closing]
+In summary, Umous is your all-in-one companion for learning and productivity. With its beautiful design,
+powerful features, and focus on user experience, it’s the perfect tool to help you achieve your goals.
+
+Thank you for watching, and we hope you enjoy using Umous as much as we enjoyed building it! 

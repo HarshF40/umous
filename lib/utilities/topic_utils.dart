@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-const String _geminiApiKey = '';
+const String _geminiApiKey = 'AIzaSyCdpHKn9GdOxUsA-h6A9nLZxBeLAIFj6Dc';
 const String _geminiEndpoint =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 Future<bool> handleNewTopic(String topic) async {
   print('New topic: $topic');
 
-  final String prompt = '''
+  final String prompt =
+      '''
 You are an expert roadmap creator for developers. Your task is to generate a **detailed, comma-separated, progressive roadmap** for the topic: "$topic".
 
 📌 Format: One single string with each step separated by commas (not lists or paragraphs).
@@ -34,16 +35,16 @@ Return the roadmap for "$topic" in the **exact same comma-separated format**.
       "contents": [
         {
           "parts": [
-            {"text": prompt}
-          ]
-        }
+            {"text": prompt},
+          ],
+        },
       ],
       "generationConfig": {
         "temperature": 0.6,
         "topK": 40,
         "topP": 0.95,
         "maxOutputTokens": 2048,
-      }
+      },
     }),
   );
 
@@ -56,22 +57,21 @@ Return the roadmap for "$topic" in the **exact same comma-separated format**.
       final roadmapText = parts.map((p) => p['text']).join().trim();
       // send to firebase and return true
       // ✅ Get the existing document
-      final docRef =
-          FirebaseFirestore.instance.collection('roadmaps').doc('topics');
+      final docRef = FirebaseFirestore.instance
+          .collection('roadmaps')
+          .doc('topics');
 
       final docSnapshot = await docRef.get();
 
       final currentFields = docSnapshot.data();
-      final nextId =
-          currentFields == null ? "1" : (currentFields.length + 1).toString();
+      final nextId = currentFields == null
+          ? "1"
+          : (currentFields.length + 1).toString();
 
       // ✅ Add new field to the existing map
-      await docRef.set(
-        {
-          nextId: {topic: roadmapText}
-        },
-        SetOptions(merge: true),
-      );
+      await docRef.set({
+        nextId: {topic: roadmapText},
+      }, SetOptions(merge: true));
 
       print("✅ Roadmap for '$topic' added under field: $nextId");
       return true;
