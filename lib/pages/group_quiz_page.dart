@@ -122,6 +122,18 @@ class _GroupQuizPageState extends State<GroupQuizPage> {
           'userEmail': user.email,
           'timestamp': FieldValue.serverTimestamp(),
         });
+
+    // Update the summary document for the leaderboard (latest score)
+    await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(widget.groupId)
+        .collection('scores')
+        .doc(user.uid)
+        .set({
+          'userEmail': user.email,
+          'points': _score, // leaderboard shows latest score
+          'lastAttempt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
     setState(() => _saving = false);
     showDialog(
       context: context,
