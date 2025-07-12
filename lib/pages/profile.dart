@@ -26,21 +26,53 @@ class ProfilePage extends StatelessWidget {
     if (user == null) {
       return const Center(child: Text("No user is currently signed in."));
     }
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.grey[300],
-                child: const Icon(Icons.person, size: 60, color: Colors.white),
+    return Container(
+      color: const Color(0xFFF8FAFC),
+      width: double.infinity,
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 40, horizontal: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(height: 24),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(100),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.18),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 54,
+                  backgroundColor: Colors.transparent,
+                  child: const Icon(
+                    Icons.person,
+                    size: 64,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
               FutureBuilder<String>(
                 future: _getUsername(user),
                 builder: (context, snapshot) {
@@ -50,18 +82,25 @@ class ProfilePage extends StatelessWidget {
                   return Text(
                     snapshot.data ?? user.uid,
                     style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
                   );
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 user.email ?? 'No email available',
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                style: const TextStyle(
+                  fontSize: 17,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
