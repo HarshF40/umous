@@ -24,7 +24,8 @@ class _ChatTutorState extends State<ChatTutor> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
-  static const String _apiKey = ''; // Replace with your key
+  static const String _apiKey =
+      'AIzaSyCdpHKn9GdOxUsA-h6A9nLZxBeLAIFj6Dc'; // Replace with your key
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
@@ -87,6 +88,27 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
   }
 
   Future<String> _sendToGemini(String userInput) async {
+    if (_apiKey.isEmpty) {
+      // Show a dialog and return an error message
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('API Key Missing'),
+            content: const Text(
+              'Please set your Gemini API key in the code to use the AI Tutor.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return "API key is missing. Please set your Gemini API key.";
+    }
     final url = Uri.parse("$_baseUrl?key=$_apiKey");
 
     final body = jsonEncode({
@@ -161,117 +183,161 @@ Remember: You are a dedicated tutor focused on helping students succeed academic
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.85),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF6366F1)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'AI Tutor',
-          style: TextStyle(
-            color: Color(0xFF6366F1),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+    try {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.white.withOpacity(0.85),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF6366F1)),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF6366F1)),
-            onPressed: _clearChat,
+          title: const Text(
+            'AI Tutor',
+            style: TextStyle(
+              color: Color(0xFF6366F1),
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ],
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-          ),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Color(0xFF6366F1)),
+              onPressed: _clearChat,
+            ),
+          ],
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: _messages.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 64,
-                            color: Colors.white70,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Start a conversation with your AI tutor',
-                            style: TextStyle(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+            ),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: _messages.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.chat_bubble_outline,
+                              size: 64,
                               color: Colors.white70,
-                              fontSize: 16,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Start a conversation with your AI tutor',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) {
+                          final message = _messages[index];
+                          return _buildMessageBubble(message);
+                        },
+                      ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.transparent,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          style: const TextStyle(color: Color(0xFF1E293B)),
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            hintText: 'Ask me anything about your studies...',
+                            hintStyle: TextStyle(color: Color(0xFF94A3B8)),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
                             ),
                           ),
-                        ],
+                          onSubmitted: (_) =>
+                              _isLoading ? null : _sendMessage(),
+                          enabled: !_isLoading,
+                        ),
                       ),
-                    )
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final message = _messages[index];
-                        return _buildMessageBubble(message);
-                      },
                     ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.transparent,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
+                    const SizedBox(width: 8),
+                    Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: const Color(0xFF6366F1),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 8,
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: TextField(
-                        controller: _messageController,
-                        style: const TextStyle(color: Color(0xFF1E293B)),
-                        maxLines: null,
-                        decoration: const InputDecoration(
-                          hintText: 'Ask me anything about your studies...',
-                          hintStyle: TextStyle(color: Color(0xFF94A3B8)),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
-                          ),
-                        ),
-                        onSubmitted: (_) => _isLoading ? null : _sendMessage(),
-                        enabled: !_isLoading,
+                      child: IconButton(
+                        icon: const Icon(Icons.send, color: Colors.white),
+                        onPressed: _isLoading ? null : _sendMessage,
+                        tooltip: 'Send',
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e, stack) {
+      // Show a fallback error UI
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                const Text(
+                  'Something went wrong!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(e.toString(), style: const TextStyle(color: Colors.red)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildMessageBubble(ChatMessage message) {

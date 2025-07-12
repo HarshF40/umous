@@ -39,7 +39,7 @@ import 'package:http/http.dart' as http;
 /// Fetch top 5 YouTube videos for a given search query (subtopic).
 /// Returns a List of Maps containing 'title', 'thumbnail', and 'link'.
 Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
-  const String apiKey = '';
+  const String apiKey = 'AIzaSyCAuEF4vNSXkA4PFlil6VpqbCGHxPqKN4c';
   if (apiKey.isEmpty) {
     throw Exception('YouTube API key is missing.');
   }
@@ -72,17 +72,14 @@ Future<List<Map<String, String>>> fetchYouTubeVideos(String query) async {
       final thumbnail = item['snippet']['thumbnails']['high']['url'];
       final link = 'https://www.youtube.com/watch?v=$videoId';
 
-      return {
-        'title': title,
-        'thumbnail': thumbnail,
-        'link': link,
-      };
+      return {'title': title, 'thumbnail': thumbnail, 'link': link};
     }).toList();
 
     return results;
   } else {
     throw Exception(
-        'Failed to fetch videos. Status code: ${response.statusCode}');
+      'Failed to fetch videos. Status code: ${response.statusCode}',
+    );
   }
 }
 

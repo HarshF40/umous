@@ -306,6 +306,7 @@ class GroupsTab extends StatelessWidget {
           ],
         ),
         child: FloatingActionButton(
+          heroTag: 'groups_fab',
           onPressed: () => _showGroupActionSheet(context),
           backgroundColor: Colors.transparent,
           elevation: 0,

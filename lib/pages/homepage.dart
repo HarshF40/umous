@@ -326,6 +326,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               child: FloatingActionButton(
+                heroTag: 'homepage_fab',
                 onPressed: () {
                   Navigator.push(
                     context,
